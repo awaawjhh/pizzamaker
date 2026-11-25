@@ -1,2 +1,5 @@
-# pizzamaker
-pizzamaker robot is a robot who can help you to choose pizza in pizzeria
+pizzamaker🍕
+-------------------------
+в этом роботе пиццемейкере вы можете заказать пиццу под ваш вкус
+Current version : v1.1.0
+шкурин платон ИИ-72
