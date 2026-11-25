@@ -2,89 +2,28 @@ import os
 import json
 
 ORDERS_HISTORY = "pizza_orders.json"
+WAREHOUSE_FILE = "warehouse.json"
 
-MENUS = {
-    "kid": {
-        "name": "меню для детей",
-        "items": {
-            "1": {
-                "name": "пицца с томатная",
-                "price": 299,
-                "ingredients": ["основа из теста", "томатный соус", "моцарелла"]
-            },
-            "2": {
-                "name": "сладкая пицца с шоколадом",
-                "price": 349,
-                "ingredients": ["основа из теста", "шоколад", "банан"]
-            },
-            "3": {
-                "name": "маленькая картошка фри",
-                "price": 159,
-                "ingredients": ["картофель"]
-            },
-            "4": {
-                "name": "сок мультифруктовый 0.5л",
-                "price": 209,
-                "ingredients": ["сок мультифрукт"]
-            },
-        }
-    },
-    "teenager": {
-        "name": "меню для подростков",
-        "items": {
-            "1": {
-                "name": "пицца пеперони",
-                "price": 599,
-                "ingredients": ["основа из теста", "томатный соус", "моцарелла", "пеперони"]
-            },
-            "2": {
-                "name": "пицца 4 сыра",
-                "price": 549,
-                "ingredients": ["основа из теста", "4 сыра"]
-            },
-            "3": {
-                "name": "картошка фри",
-                "price": 209,
-                "ingredients": ["картофель"]
-            },
-            "4": {
-                "name": "газява 0.5л",
-                "price": 229,
-                "ingredients": ["газировка"]
-            },
-        }
-    },
-    "adult": {
-        "name": "взрослое меню",
-        "items": {
-            "1": {
-                "name": "пицца пеперони",
-                "price": 799,
-                "ingredients": ["основа из теста", "томатный соус", "моцарелла", "пеперони"]
-            },
-            "2": {
-                "name": "пицца 4 сыра",
-                "price": 719,
-                "ingredients": ["основа из теста", "4 сыра"]
-            },
-            "3": {
-                "name": "пицца пеперони big++maxpro",
-                "price": 1199,
-                "ingredients": ["большая основа из теста", "томатный соус", "моцарелла", "пеперони", "перец"]
-            },
-            "4": {
-                "name": "картошка фри big+++",
-                "price": 459,
-                "ingredients": ["картофель", " томатный соус"]
-            },
-            "5": {
-                "name": "газява 0.5л",
-                "price": 229,
-                "ingredients": ["газировка"]
-            }
-        }
-    }
+MENU_FILES = {
+    "kid": "menu_kid.json",
+    "teenager": "menu_teenager.json",
+    "adult": "menu_adult.json"
 }
+
+
+def _load_json(filename, default_value):
+    if os.path.exists(filename):
+        try:
+            with open(filename, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            return default_value
+    return default_value
+
+
+def _save_json(filename, data):
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 
 def get_age_category(age):
@@ -96,21 +35,50 @@ def get_age_category(age):
 
 
 def get_menu_by_category(category):
-    return MENUS[category]
+    filename = MENU_FILES.get(category)
+    if not filename:
+        return {"name": "Меню не найдено", "items": {}}
+    return _load_json(filename, {"name": "Пустое меню", "items": {}})
+
+
+def load_warehouse():
+    return _load_json(WAREHOUSE_FILE, {})
+
+
+def save_warehouse(warehouse_data):
+    _save_json(WAREHOUSE_FILE, warehouse_data)
+
+
+def restock_warehouse(amount=10):
+    warehouse = load_warehouse()
+    for item in warehouse:
+        warehouse[item] += amount
+    save_warehouse(warehouse)
+    return warehouse
+
+
+def check_ingredients_available(ingredients, reserved_counts):
+    warehouse = load_warehouse()
+    for item in ingredients:
+        already_in_cart = reserved_counts.get(item, 0)
+        if warehouse.get(item, 0) - already_in_cart <= 0:
+            return False, item
+    return True, None
+
+
+def deduct_ingredients(ingredients_list):
+    warehouse = load_warehouse()
+    for item in ingredients_list:
+        if item in warehouse and warehouse[item] > 0:
+            warehouse[item] -= 1
+    save_warehouse(warehouse)
 
 
 def load_orders():
-    if os.path.exists(ORDERS_HISTORY):
-        try:
-            with open(ORDERS_HISTORY, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return []
-    return []
+    return _load_json(ORDERS_HISTORY, [])
 
 
 def save_order(order_data):
     orders = load_orders()
     orders.append(order_data)
-    with open(ORDERS_HISTORY, "w", encoding="utf-8") as f:
-        json.dump(orders, f, ensure_ascii=False, indent=4)
+    _save_json(ORDERS_HISTORY, orders)

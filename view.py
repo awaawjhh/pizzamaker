@@ -43,10 +43,18 @@ def show_menu_items(menu_section):
     print("[0] Завершить выбор")
 
 
+def show_admin_menu():
+    print("\nпанель администратора"
+          "\nCurrent ver. 1.2.0")
+    print("[1] Показать все заказы")
+    print("[2] Показать склад")
+    print("[3] Пополнить склад (все по +10)")
+    print("[0] Выйти из админ-панели")
+
+
 def show_admin_report(orders):
-    print("\nпанель для админа")
     if not orders:
-        print("истории заказов нету")
+        print("\nИстории заказов нет.")
         return
     total_revenue = 0
     for i, order in enumerate(orders, 1):
@@ -54,3 +62,12 @@ def show_admin_report(orders):
         print_single_cheque(order)
         total_revenue += order['total_price']
     print(f"\nОБЩАЯ ВЫРУЧКА ЗА ВСЁ ВРЕМЯ: {total_revenue} руб.")
+
+
+def show_warehouse(warehouse):
+    print("\n--- ОСТАТКИ НА СКЛАДЕ ---")
+    if not warehouse:
+        print("Склад пуст или файл warehouse.json не найден.")
+        return
+    for ingredient, count in warehouse.items():
+        print(f" - {ingredient}: {count} шт.")
